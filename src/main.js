@@ -9,6 +9,7 @@ let state = {
   matchedItems: [],       // Array of matches across all pages
   zoom: 1.0,              // Current zoom scale
   pricePosition: 'right', // Price label position ('right', 'left', 'above', 'below')
+  priceSize: 11,          // Default price font size in px
   originalPdfFile: null,
   originalExcelFile: null,
   isProcessing: false,
@@ -30,6 +31,8 @@ const statExcelTotal = document.getElementById('stat-excel-total');
 const statPdfDetected = document.getElementById('stat-pdf-detected');
 
 const pricePositionSelect = document.getElementById('price-position');
+const priceSizeSlider = document.getElementById('price-size');
+const priceSizeValDisplay = document.getElementById('price-size-val');
 const codeSearchInput = document.getElementById('code-search');
 const manualCodeInput = document.getElementById('manual-code');
 const manualPriceInput = document.getElementById('manual-price');
@@ -69,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSettings();
 });
 
-// 1. Settings & Price Placement Positioning
+// 1. Settings & Price Placement Positioning / Sizing
 function setupSettings() {
   pricePositionSelect.addEventListener('change', (e) => {
     state.pricePosition = e.target.value;
@@ -77,6 +80,15 @@ function setupSettings() {
       updateStatus('Reposicionando etiquetas...', 'loading');
       redrawAllOverlays();
       updateStatus('Etiquetas reposicionadas', 'success');
+    }
+  });
+
+  priceSizeSlider.addEventListener('input', (e) => {
+    const newSize = parseInt(e.target.value);
+    state.priceSize = newSize;
+    priceSizeValDisplay.textContent = newSize;
+    if (state.pdfDocument) {
+      redrawAllOverlays();
     }
   });
 }
@@ -307,6 +319,9 @@ function drawPriceBadges(overlayElement, matches, pageNum) {
     
     // Format: "150.000" (no currency symbol, no decimals, dotted thousands)
     badge.textContent = formatPrice(match.price);
+    
+    // Set custom size selected by user
+    badge.style.fontSize = `${state.priceSize}px`;
     
     badge.setAttribute('data-code', match.code);
     badge.setAttribute('title', `Código: ${match.code}\nHaz clic para editar`);
@@ -556,7 +571,7 @@ function setupManualForm() {
       updateStatus('Generando catálogo PDF...', 'loading');
       btnDownloadPdf.setAttribute('disabled', 'true');
       
-      const annotatedBlob = await exportAnnotatedPDF(state.originalPdfFile, state.matchedItems, state.pricePosition);
+      const annotatedBlob = await exportAnnotatedPDF(state.originalPdfFile, state.matchedItems, state.pricePosition, state.priceSize);
       
       // Trigger download
       const url = URL.createObjectURL(annotatedBlob);
