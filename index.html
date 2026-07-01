@@ -71,17 +71,25 @@
 
         <!-- Section: Settings -->
         <section class="panel-section" id="settings-panel">
-          <h2>Configuración Visual</h2>
-          <div class="form-group">
-            <label for="price-position">Posición del precio</label>
-            <select id="price-position" class="form-select">
-              <option value="right" selected>Derecha del código</option>
-              <option value="left">Izquierda del código</option>
-              <option value="above">Arriba del código</option>
-              <option value="below">Abajo del código</option>
-            </select>
-          </div>
+          <details class="settings-details">
+            <summary class="settings-summary">
+              <h2>Configuración Visual</h2>
+              <span class="summary-arrow">▼</span>
+            </summary>
+            <div class="settings-content">
+              <div class="form-group">
+                <label for="price-position">Posición del precio</label>
+                <select id="price-position" class="form-select">
+                  <option value="right" selected>Derecha del código</option>
+                  <option value="left">Izquierda del código</option>
+                  <option value="above">Arriba del código</option>
+                  <option value="below">Abajo del código</option>
+                </select>
+              </div>
+            </div>
+          </details>
         </section>
+
 
         <!-- Section: Search & Manual Entry -->
         <section class="panel-section" id="search-panel">

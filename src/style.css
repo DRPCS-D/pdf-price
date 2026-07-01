@@ -818,3 +818,52 @@ body {
   color: var(--text-muted);
 }
 
+/* Collapsible Settings Section */
+.settings-details {
+  border: none;
+}
+
+.settings-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.settings-summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-summary h2 {
+  margin-bottom: 0 !important; /* Remove bottom margin since it's collapsible */
+}
+
+.summary-arrow {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.settings-details[open] .summary-arrow {
+  transform: rotate(180deg);
+}
+
+.settings-content {
+  margin-top: 14px;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
