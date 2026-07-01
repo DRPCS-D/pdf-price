@@ -207,6 +207,7 @@ async function handlePDFFile(file) {
     btnZoomFit.removeAttribute('disabled');
 
     // Show stats
+    statsPanel.classList.remove('hidden');
     updateMatchedStats();
     
     updateStatus('Catálogo procesado con éxito', 'success');
