@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Annotator PDF - Catálogo con Precios</title>
+  <!-- Google Fonts: Outfit and Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <span class="logo-icon">🏷️</span>
+        <h1>PDF Catalog Price Annotator</h1>
+      </div>
+      <div class="header-status">
+        <span id="global-status" class="status-badge idle">Esperando archivos</span>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+      <!-- Sidebar Control Panel -->
+      <aside class="sidebar">
+        <!-- Section: Uploads -->
+        <section class="panel-section">
+          <h2>1. Cargar Archivos</h2>
+          
+          <!-- Excel Dropzone -->
+          <div class="dropzone" id="excel-dropzone">
+            <input type="file" id="excel-file" accept=".xlsx, .xls" class="file-input">
+            <div class="dropzone-content">
+              <span class="dropzone-icon">📊</span>
+              <p class="dropzone-title">Base de Precios (Excel)</p>
+              <p class="dropzone-desc">Arrastra o haz clic para subir (.xlsx, .xls)</p>
+              <span id="excel-file-name" class="file-name-indicator">Ningún archivo cargado</span>
+            </div>
+          </div>
+
+          <!-- PDF Dropzone -->
+          <div class="dropzone disabled" id="pdf-dropzone">
+            <input type="file" id="pdf-file" accept=".pdf" class="file-input" disabled>
+            <div class="dropzone-content">
+              <span class="dropzone-icon">📕</span>
+              <p class="dropzone-title">Catálogo (PDF)</p>
+              <p class="dropzone-desc">Arrastra o haz clic para subir (.pdf)</p>
+              <span id="pdf-file-name" class="file-name-indicator">Ningún archivo cargado</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: Summary -->
+        <section class="panel-section stats-section hidden" id="stats-panel">
+          <h2>Resumen del Proceso</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-value" id="stat-excel-total">0</span>
+              <span class="stat-label">Códigos en Excel</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value" id="stat-pdf-detected">0</span>
+              <span class="stat-label">Detectados en PDF</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: Settings -->
+        <section class="panel-section" id="settings-panel">
+          <h2>Configuración Visual</h2>
+          <div class="form-group">
+            <label for="price-position">Posición del precio</label>
+            <select id="price-position" class="form-select">
+              <option value="right" selected>Derecha del código</option>
+              <option value="left">Izquierda del código</option>
+              <option value="above">Arriba del código</option>
+              <option value="below">Abajo del código</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- Section: Search & Manual Entry -->
+        <section class="panel-section" id="search-panel">
+          <h2>2. Buscador y Carga Manual</h2>
+          <div class="search-box-container">
+            <input type="text" id="code-search" placeholder="Buscar código (ej: COD-01)..." disabled>
+            <span class="search-icon">🔍</span>
+          </div>
+
+          <div class="manual-entry-form">
+            <div class="form-group">
+              <label for="manual-code">Código</label>
+              <input type="text" id="manual-code" placeholder="Código exacto">
+            </div>
+            <div class="form-group">
+              <label for="manual-price">Precio</label>
+              <div class="price-input-wrapper">
+                <span class="currency-symbol">$</span>
+                <input type="number" id="manual-price" placeholder="0.00" step="0.01">
+              </div>
+            </div>
+            <button type="button" id="btn-save-price" class="btn-primary" disabled>Asignar / Guardar Precio</button>
+          </div>
+        </section>
+
+        <!-- Section: Actions -->
+        <section class="panel-section actions-panel">
+          <h2>3. Finalizar Catálogo</h2>
+          <button type="button" id="btn-download-pdf" class="btn-success" disabled>
+            <span class="btn-icon">📥</span>
+            Descargar PDF con Precios
+          </button>
+        </section>
+      </aside>
+
+      <!-- PDF Canvas Viewport -->
+      <main class="viewer-container">
+        <!-- PDF Viewer Toolbar -->
+        <div class="viewer-toolbar">
+          <div class="zoom-controls">
+            <button id="btn-zoom-out" class="btn-tool" title="Reducir Zoom" disabled>−</button>
+            <span id="zoom-value" class="zoom-indicator">100%</span>
+            <button id="btn-zoom-in" class="btn-tool" title="Aumentar Zoom" disabled>+</button>
+            <button id="btn-zoom-fit" class="btn-tool" title="Ajustar Ancho" disabled>↔</button>
+          </div>
+          <div class="page-indicator">
+            Página <span id="current-page">0</span> de <span id="total-pages">0</span>
+          </div>
+        </div>
+
+        <!-- Render Target -->
+        <div class="pdf-scroll-container" id="pdf-scroll-container">
+          <div class="viewer-welcome" id="viewer-welcome-message">
+            <div class="welcome-card">
+              <div class="welcome-icon">🏷️</div>
+              <h2>Visor del Catálogo Interactivo</h2>
+              <p>Sube tu base de datos en Excel y tu catálogo PDF para comenzar.</p>
+              <p class="welcome-tip">Los códigos detectados mostrarán sus precios al lado y podrás editarlos con un solo clic.</p>
+            </div>
+          </div>
+          <div id="pdf-pages-wrapper" class="pdf-pages-wrapper">
+            <!-- Pages will be dynamically appended here -->
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Quick Price Editor Popover (Modal) -->
+    <div id="price-edit-popover" class="popover hidden">
+      <div class="popover-arrow"></div>
+      <div class="popover-content">
+        <h3>Editar Precio</h3>
+        <p class="popover-subtitle" id="popover-code">Código: </p>
+        <div class="form-group">
+          <div class="price-input-wrapper">
+            <span class="currency-symbol">$</span>
+            <input type="number" id="popover-price-input" placeholder="0.00" step="0.01">
+          </div>
+        </div>
+        <div class="popover-actions">
+          <button id="btn-popover-cancel" class="btn-text">Cancelar</button>
+          <button id="btn-popover-save" class="btn-primary-sm">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
