@@ -6,7 +6,7 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
  * @param {Array<Object>} matchedItems - Array of matched items containing pdfX, pdfY, pageNum, price, etc.
  * @returns {Promise<Blob>} The generated PDF as a Blob.
  */
-export async function exportAnnotatedPDF(originalPdfFile, matchedItems, position = 'right') {
+export async function exportAnnotatedPDF(originalPdfFile, matchedItems, position = 'right', customFontSize = 11) {
   const arrayBuffer = await originalPdfFile.arrayBuffer();
   const pdfDoc = await PDFDocument.load(arrayBuffer);
   const pages = pdfDoc.getPages();
@@ -28,8 +28,8 @@ export async function exportAnnotatedPDF(originalPdfFile, matchedItems, position
     const priceVal = parseFloat(match.price || 0);
     const priceText = formatter.format(Math.round(priceVal));
     
-    // Determine font size based on the original text height, with sensible limits
-    const fontSize = Math.max(Math.min(match.pdfHeight * 0.95, 14), 7);
+    // Use custom font size chosen by user
+    const fontSize = customFontSize;
     
     // Measure text width using pdf-lib font utility
     const textWidth = font.widthOfTextAtSize(priceText, fontSize);
