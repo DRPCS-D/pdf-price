@@ -39,6 +39,7 @@ export function parseExcelPrices(file) {
         // Let's analyze the first few rows to find headers
         // Sometimes headers are not in the first row. We'll search up to the first 5 rows.
         let headerRowIndex = 0;
+        let foundHeaders = false;
         for (let r = 0; r < Math.min(jsonData.length, 5); r++) {
           const row = jsonData[r];
           if (!row) continue;
@@ -54,6 +55,7 @@ export function parseExcelPrices(file) {
           }
           if (codeIndex !== -1 && priceIndex !== -1) {
             headerRowIndex = r;
+            foundHeaders = true;
             break;
           }
         }
@@ -63,7 +65,8 @@ export function parseExcelPrices(file) {
         if (priceIndex === -1) priceIndex = 1;
 
         // Read the data rows
-        for (let r = headerRowIndex + 1; r < jsonData.length; r++) {
+        const startRow = foundHeaders ? headerRowIndex + 1 : 0;
+        for (let r = startRow; r < jsonData.length; r++) {
           const row = jsonData[r];
           if (!row) continue;
 

@@ -56,18 +56,18 @@ export async function renderPageAndMatchCodes(pdfDoc, pageNum, canvas, scale, ex
     
     // 1. Intentar buscar correspondencia con códigos de Excel
     for (const code of codesToSearch) {
-      const cleanTextStr = textStr.toLowerCase();
-      const cleanCode = code.toLowerCase();
+      const normTextStr = normalizeCode(textStr);
+      const normCode = normalizeCode(code);
       
       let isMatch = false;
-      if (cleanTextStr === cleanCode) {
+      if (normTextStr === normCode) {
         isMatch = true;
-      } else if (cleanTextStr.includes(cleanCode)) {
-        if (code.length >= 4) {
+      } else if (normTextStr.includes(normCode)) {
+        if (normCode.length >= 4) {
           isMatch = true;
         } else {
-          const regex = new RegExp(`\\b${escapeRegExp(cleanCode)}\\b`);
-          isMatch = regex.test(cleanTextStr);
+          const regex = new RegExp(`\\b${escapeRegExp(normCode)}\\b`);
+          isMatch = regex.test(normTextStr);
         }
       }
       
@@ -79,14 +79,23 @@ export async function renderPageAndMatchCodes(pdfDoc, pageNum, canvas, scale, ex
       }
     }
     
-    // 2. Si no coincide, auto-detectar el patrón estándar de catálogo: 000-000-00
+    // 2. Si no coincide, auto-detectar el patrón estándar de catálogo: 000-000-00 o 00000.00(0)
     if (!isMatched) {
-      const catalogPattern = /\b\d{3}-\d{3}-\d{2}\b/;
+      const catalogPattern = /\b\d{3}-\d{3}-\d{2}\b|\b\d{5}\.\d{2,3}\b/;
       const matchPattern = textStr.match(catalogPattern);
       if (matchPattern) {
-        isMatched = true;
-        matchedCode = matchPattern[0];
-        matchedPrice = excelPrices.get(matchedCode) || 0;
+        // Encontrar el código original correspondiente en excelPrices usando normalización
+        const normMatched = normalizeCode(matchPattern[0]);
+        const matchedRealCode = codesToSearch.find(c => normalizeCode(c) === normMatched);
+        if (matchedRealCode) {
+          isMatched = true;
+          matchedCode = matchedRealCode;
+          matchedPrice = excelPrices.get(matchedRealCode);
+        } else {
+          isMatched = true;
+          matchedCode = matchPattern[0];
+          matchedPrice = excelPrices.get(matchedCode) || 0;
+        }
       }
     }
     
@@ -135,7 +144,7 @@ export async function renderPageAndMatchCodes(pdfDoc, pageNum, canvas, scale, ex
 export async function searchCodeInPDF(pdfDoc, code, scale) {
   const matches = [];
   const numPages = pdfDoc.numPages;
-  const cleanCode = code.toLowerCase().trim();
+  const normCode = normalizeCode(code);
   
   for (let pageNum = 1; pageNum <= numPages; pageNum++) {
     const page = await pdfDoc.getPage(pageNum);
@@ -146,17 +155,17 @@ export async function searchCodeInPDF(pdfDoc, code, scale) {
       if (!item.str || item.str.trim() === '') continue;
       
       const textStr = item.str.trim();
-      const cleanTextStr = textStr.toLowerCase();
+      const normTextStr = normalizeCode(textStr);
       
       let isMatch = false;
-      if (cleanTextStr === cleanCode) {
+      if (normTextStr === normCode) {
         isMatch = true;
-      } else if (cleanTextStr.includes(cleanCode)) {
-        if (cleanCode.length >= 4) {
+      } else if (normTextStr.includes(normCode)) {
+        if (normCode.length >= 4) {
           isMatch = true;
         } else {
-          const regex = new RegExp(`\\b${escapeRegExp(cleanCode)}\\b`);
-          isMatch = regex.test(cleanTextStr);
+          const regex = new RegExp(`\\b${escapeRegExp(normCode)}\\b`);
+          isMatch = regex.test(normTextStr);
         }
       }
       
@@ -186,6 +195,15 @@ export async function searchCodeInPDF(pdfDoc, code, scale) {
   }
   
   return matches;
+}
+
+/**
+ * Normalizes code strings to a canonical format (lowercase, digits and letters only)
+ * for robust matching across different styles (e.g. 13.511-126 vs 13511.126).
+ */
+function normalizeCode(str) {
+  if (!str) return '';
+  return str.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 /**
