@@ -10,6 +10,7 @@ let state = {
   zoom: 1.0,              // Current zoom scale
   pricePosition: 'right', // Price label position ('right', 'left', 'above', 'below')
   priceSize: 11,          // Default price font size in px
+  priceMargin: 5,         // Default spacing in px/points
   originalPdfFile: null,
   originalExcelFile: null,
   isProcessing: false,
@@ -33,6 +34,8 @@ const statPdfDetected = document.getElementById('stat-pdf-detected');
 const pricePositionSelect = document.getElementById('price-position');
 const priceSizeSlider = document.getElementById('price-size');
 const priceSizeValDisplay = document.getElementById('price-size-val');
+const priceMarginSlider = document.getElementById('price-margin');
+const priceMarginValDisplay = document.getElementById('price-margin-val');
 const codeSearchInput = document.getElementById('code-search');
 const manualCodeInput = document.getElementById('manual-code');
 const manualPriceInput = document.getElementById('manual-price');
@@ -87,6 +90,15 @@ function setupSettings() {
     const newSize = parseInt(e.target.value);
     state.priceSize = newSize;
     priceSizeValDisplay.textContent = newSize;
+    if (state.pdfDocument) {
+      redrawAllOverlays();
+    }
+  });
+
+  priceMarginSlider.addEventListener('input', (e) => {
+    const newMargin = parseInt(e.target.value);
+    state.priceMargin = newMargin;
+    priceMarginValDisplay.textContent = newMargin;
     if (state.pdfDocument) {
       redrawAllOverlays();
     }
@@ -298,7 +310,7 @@ function drawPriceBadges(overlayElement, matches, pageNum) {
     // Position offset calculations in pixels (for browser display)
     let left = match.x;
     let top = match.y;
-    const margin = 5; // spacing in pixels
+    const margin = state.priceMargin * state.zoom; // spacing in pixels, scaled with zoom
     
     if (pos === 'right') {
       left = match.x + match.width + margin;
@@ -571,7 +583,7 @@ function setupManualForm() {
       updateStatus('Generando catálogo PDF...', 'loading');
       btnDownloadPdf.setAttribute('disabled', 'true');
       
-      const annotatedBlob = await exportAnnotatedPDF(state.originalPdfFile, state.matchedItems, state.pricePosition, state.priceSize);
+      const annotatedBlob = await exportAnnotatedPDF(state.originalPdfFile, state.matchedItems, state.pricePosition, state.priceSize, state.priceMargin);
       
       // Trigger download
       const url = URL.createObjectURL(annotatedBlob);

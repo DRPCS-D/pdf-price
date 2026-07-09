@@ -6,7 +6,7 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
  * @param {Array<Object>} matchedItems - Array of matched items containing pdfX, pdfY, pageNum, price, etc.
  * @returns {Promise<Blob>} The generated PDF as a Blob.
  */
-export async function exportAnnotatedPDF(originalPdfFile, matchedItems, position = 'right', customFontSize = 11) {
+export async function exportAnnotatedPDF(originalPdfFile, matchedItems, position = 'right', customFontSize = 11, customMargin = 5) {
   const arrayBuffer = await originalPdfFile.arrayBuffer();
   const pdfDoc = await PDFDocument.load(arrayBuffer);
   const pages = pdfDoc.getPages();
@@ -38,7 +38,7 @@ export async function exportAnnotatedPDF(originalPdfFile, matchedItems, position
     let drawY = match.pdfY;
     
     // Position offset calculations (in PDF points, starting bottom-left)
-    const margin = 5; // spacing in points
+    const margin = customMargin; // spacing in points
     
     if (position === 'right') {
       drawX = match.pdfX + match.pdfWidth + margin;
