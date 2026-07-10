@@ -90,6 +90,9 @@ function setupSettings() {
     const newSize = parseInt(e.target.value);
     state.priceSize = newSize;
     priceSizeValDisplay.textContent = newSize;
+  });
+
+  priceSizeSlider.addEventListener('change', () => {
     if (state.pdfDocument) {
       redrawAllOverlays();
     }
@@ -99,6 +102,9 @@ function setupSettings() {
     const newMargin = parseInt(e.target.value);
     state.priceMargin = newMargin;
     priceMarginValDisplay.textContent = newMargin;
+  });
+
+  priceMarginSlider.addEventListener('change', () => {
     if (state.pdfDocument) {
       redrawAllOverlays();
     }
