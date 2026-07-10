@@ -77,6 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 1. Settings & Price Placement Positioning / Sizing
 function setupSettings() {
+  // Set initial CSS variables
+  document.documentElement.style.setProperty('--price-size', `${state.priceSize}px`);
+  document.documentElement.style.setProperty('--price-margin', `${state.priceMargin * state.zoom}px`);
+
   pricePositionSelect.addEventListener('change', (e) => {
     state.pricePosition = e.target.value;
     if (state.pdfDocument) {
@@ -90,24 +94,14 @@ function setupSettings() {
     const newSize = parseInt(e.target.value);
     state.priceSize = newSize;
     priceSizeValDisplay.textContent = newSize;
-  });
-
-  priceSizeSlider.addEventListener('change', () => {
-    if (state.pdfDocument) {
-      redrawAllOverlays();
-    }
+    document.documentElement.style.setProperty('--price-size', `${newSize}px`);
   });
 
   priceMarginSlider.addEventListener('input', (e) => {
     const newMargin = parseInt(e.target.value);
     state.priceMargin = newMargin;
     priceMarginValDisplay.textContent = newMargin;
-  });
-
-  priceMarginSlider.addEventListener('change', () => {
-    if (state.pdfDocument) {
-      redrawAllOverlays();
-    }
+    document.documentElement.style.setProperty('--price-margin', `${newMargin * state.zoom}px`);
   });
 }
 
@@ -313,23 +307,22 @@ function drawPriceBadges(overlayElement, matches, pageNum) {
     const badge = document.createElement('div');
     badge.className = `price-badge pos-${pos}`;
     
-    // Position offset calculations in pixels (for browser display)
+    // Position base coordinates in pixels (for browser display, margin is added via CSS transforms)
     let left = match.x;
     let top = match.y;
-    const margin = state.priceMargin * state.zoom; // spacing in pixels, scaled with zoom
     
     if (pos === 'right') {
-      left = match.x + match.width + margin;
+      left = match.x + match.width;
       top = match.y - match.height / 2;
     } else if (pos === 'left') {
-      left = match.x - margin;
+      left = match.x;
       top = match.y - match.height / 2;
     } else if (pos === 'above') {
       left = match.x + match.width / 2;
-      top = match.y - match.height - margin;
+      top = match.y - match.height;
     } else if (pos === 'below') {
       left = match.x + match.width / 2;
-      top = match.y + margin;
+      top = match.y;
     }
     
     badge.style.left = `${left}px`;
@@ -337,9 +330,6 @@ function drawPriceBadges(overlayElement, matches, pageNum) {
     
     // Format: "150.000" (no currency symbol, no decimals, dotted thousands)
     badge.textContent = formatPrice(match.price);
-    
-    // Set custom size selected by user
-    badge.style.fontSize = `${state.priceSize}px`;
     
     badge.setAttribute('data-code', match.code);
     badge.setAttribute('title', `Código: ${match.code}\nHaz clic para editar`);
@@ -386,6 +376,7 @@ function setupZoomControls() {
 
 async function applyZoom() {
   zoomValueDisplay.textContent = `${Math.round(state.zoom * 100)}%`;
+  document.documentElement.style.setProperty('--price-margin', `${state.priceMargin * state.zoom}px`);
   updateStatus('Redimensionando páginas...', 'loading');
   
   // Render pages at the new scale

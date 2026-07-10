@@ -641,7 +641,7 @@ body {
   border: none;
   color: #D92D20; /* Rojo vibrante */
   font-weight: 800;
-  font-size: 11px;
+  font-size: var(--price-size, 11px);
   padding: 4px 6px;
   cursor: pointer;
   user-select: none;
@@ -659,32 +659,32 @@ body {
 
 /* Position-specific transforms to handle offsets automatically */
 .price-badge.pos-right {
-  transform: translate(0, -50%);
+  transform: translate(var(--price-margin, 5px), -50%);
 }
 .price-badge.pos-left {
-  transform: translate(-100%, -50%);
+  transform: translate(calc(-100% - var(--price-margin, 5px)), -50%);
 }
 .price-badge.pos-above {
-  transform: translate(-50%, -100%);
+  transform: translate(-50%, calc(-100% - var(--price-margin, 5px)));
 }
 .price-badge.pos-below {
-  transform: translate(-50%, 0);
+  transform: translate(-50%, var(--price-margin, 5px));
 }
 
 .price-badge.pos-right:hover {
-  transform: translate(0, -50%) scale(1.25);
+  transform: translate(var(--price-margin, 5px), -50%) scale(1.25);
   z-index: 10;
 }
 .price-badge.pos-left:hover {
-  transform: translate(-100%, -50%) scale(1.25);
+  transform: translate(calc(-100% - var(--price-margin, 5px)), -50%) scale(1.25);
   z-index: 10;
 }
 .price-badge.pos-above:hover {
-  transform: translate(-50%, -100%) scale(1.25);
+  transform: translate(-50%, calc(-100% - var(--price-margin, 5px))) scale(1.25);
   z-index: 10;
 }
 .price-badge.pos-below:hover {
-  transform: translate(-50%, 0) scale(1.25);
+  transform: translate(-50%, var(--price-margin, 5px)) scale(1.25);
   z-index: 10;
 }
 
