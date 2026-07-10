@@ -102,6 +102,12 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .header-status {
   display: flex;
   align-items: center;
