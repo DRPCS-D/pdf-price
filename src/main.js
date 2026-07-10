@@ -59,6 +59,18 @@ const popoverPriceInput = document.getElementById('popover-price-input');
 const btnPopoverCancel = document.getElementById('btn-popover-cancel');
 const btnPopoverSave = document.getElementById('btn-popover-save');
 
+const loadingOverlay = document.getElementById('loading-overlay');
+const loadingOverlayText = document.getElementById('loading-overlay-text');
+
+function showLoading(text) {
+  loadingOverlayText.textContent = text;
+  loadingOverlay.classList.remove('hidden');
+}
+
+function hideLoading() {
+  loadingOverlay.classList.add('hidden');
+}
+
 // Formatting helper: "150.000" (no currency symbol, thousands separator dot, no decimals)
 const priceFormatter = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 function formatPrice(value) {
@@ -173,75 +185,83 @@ function setupFileDropzones() {
 }
 
 async function handleExcelFile(file) {
-  try {
-    updateStatus('Cargando Excel...', 'loading');
-    state.isProcessing = true;
-    
-    const pricesMap = await parseExcelPrices(file);
-    state.excelPrices = pricesMap;
-    state.originalExcelFile = file;
-    
-    // UI Update
-    excelDropzone.classList.add('success-loaded');
-    excelFileName.textContent = file.name;
-    
-    // Enable PDF Upload
-    pdfDropzone.classList.remove('disabled');
-    pdfFileInput.removeAttribute('disabled');
-    
-    // Update Stats
-    statExcelTotal.textContent = pricesMap.size;
-    statsPanel.classList.remove('hidden');
-    
-    updateStatus('Excel cargado. Suba el PDF.', 'success');
-  } catch (error) {
-    updateStatus(error.message, 'idle');
-    alert(error.message);
-  } finally {
-    state.isProcessing = false;
-  }
+  showLoading('Cargando base de datos de precios (Excel)...');
+  updateStatus('Cargando Excel...', 'loading');
+  state.isProcessing = true;
+  
+  setTimeout(async () => {
+    try {
+      const pricesMap = await parseExcelPrices(file);
+      state.excelPrices = pricesMap;
+      state.originalExcelFile = file;
+      
+      // UI Update
+      excelDropzone.classList.add('success-loaded');
+      excelFileName.textContent = file.name;
+      
+      // Enable PDF Upload
+      pdfDropzone.classList.remove('disabled');
+      pdfFileInput.removeAttribute('disabled');
+      
+      // Update Stats
+      statExcelTotal.textContent = pricesMap.size;
+      statsPanel.classList.remove('hidden');
+      
+      updateStatus('Excel cargado. Suba el PDF.', 'success');
+    } catch (error) {
+      updateStatus(error.message, 'idle');
+      alert(error.message);
+    } finally {
+      state.isProcessing = false;
+      hideLoading();
+    }
+  }, 100);
 }
 
 async function handlePDFFile(file) {
-  try {
-    updateStatus('Cargando PDF y buscando códigos...', 'loading');
-    state.isProcessing = true;
-    state.originalPdfFile = file;
-    pdfFileName.textContent = file.name;
-    pdfDropzone.classList.add('success-loaded');
+  showLoading('Cargando PDF y buscando códigos...');
+  updateStatus('Cargando PDF y buscando códigos...', 'loading');
+  state.isProcessing = true;
+  state.originalPdfFile = file;
+  pdfFileName.textContent = file.name;
+  pdfDropzone.classList.add('success-loaded');
 
-    // Load PDF Document
-    state.pdfDocument = await loadPDF(file);
-    totalPagesDisplay.textContent = state.pdfDocument.numPages;
-    currentPageDisplay.textContent = '1';
+  setTimeout(async () => {
+    try {
+      // Load PDF Document
+      state.pdfDocument = await loadPDF(file);
+      totalPagesDisplay.textContent = state.pdfDocument.numPages;
+      currentPageDisplay.textContent = '1';
 
-    // Clear previous viewer state
-    pdfPagesWrapper.innerHTML = '';
-    viewerWelcome.classList.add('hidden');
-    state.matchedItems = [];
+      // Clear previous viewer state
+      pdfPagesWrapper.innerHTML = '';
+      viewerWelcome.classList.add('hidden');
+      state.matchedItems = [];
 
-    // Render pages and find matches
-    await renderAllPages();
-    
-    // Enable other controls
-    codeSearchInput.removeAttribute('disabled');
-    btnDownloadPdf.removeAttribute('disabled');
-    btnZoomIn.removeAttribute('disabled');
-    btnZoomOut.removeAttribute('disabled');
-    btnZoomFit.removeAttribute('disabled');
+      // Render pages and find matches
+      await renderAllPages();
+      
+      // Enable other controls
+      codeSearchInput.removeAttribute('disabled');
+      btnDownloadPdf.removeAttribute('disabled');
+      btnZoomIn.removeAttribute('disabled');
+      btnZoomOut.removeAttribute('disabled');
+      btnZoomFit.removeAttribute('disabled');
 
-    // Show stats
-    statsPanel.classList.remove('hidden');
-    updateMatchedStats();
-    
-    updateStatus('Catálogo procesado con éxito', 'success');
-  } catch (error) {
-    updateStatus('Error al cargar PDF', 'idle');
-    console.error(error);
-    alert('Error al procesar el PDF: ' + error.message);
-  } finally {
-    state.isProcessing = false;
-  }
+      // Show stats
+      statsPanel.classList.remove('hidden');
+      updateMatchedStats();
+      
+      updateStatus('Catálogo procesado con éxito', 'success');
+    } catch (error) {
+      updateStatus('Error al cargar PDF', 'idle');
+      console.error(error);
+      alert('Error al procesar el PDF: ' + error.message);
+    } finally {
+      state.isProcessing = false;
+      hideLoading();
+    }
+  }, 100);
 }
 
 function updateStatus(text, type) {
@@ -377,12 +397,20 @@ function setupZoomControls() {
 async function applyZoom() {
   zoomValueDisplay.textContent = `${Math.round(state.zoom * 100)}%`;
   document.documentElement.style.setProperty('--price-margin', `${state.priceMargin * state.zoom}px`);
+  showLoading('Redimensionando visor y re-ajustando catálogo...');
   updateStatus('Redimensionando páginas...', 'loading');
   
-  // Render pages at the new scale
-  await renderAllPages();
-  
-  updateStatus('Visualización actualizada', 'success');
+  setTimeout(async () => {
+    try {
+      // Render pages at the new scale
+      await renderAllPages();
+      updateStatus('Visualización actualizada', 'success');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      hideLoading();
+    }
+  }, 100);
 }
 
 // 5. Popover / Quick Edit modal
@@ -576,36 +604,40 @@ function setupManualForm() {
   btnDownloadPdf.addEventListener('click', async () => {
     if (!state.originalPdfFile || state.matchedItems.length === 0) return;
     
-    try {
-      updateStatus('Generando catálogo PDF...', 'loading');
-      btnDownloadPdf.setAttribute('disabled', 'true');
-      
-      const annotatedBlob = await exportAnnotatedPDF(state.originalPdfFile, state.matchedItems, state.pricePosition, state.priceSize, state.priceMargin);
-      
-      // Trigger download
-      const url = URL.createObjectURL(annotatedBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      
-      // Append "_precios" to original file name
-      const origName = state.originalPdfFile.name;
-      const extensionIdx = origName.lastIndexOf('.');
-      const newName = origName.substring(0, extensionIdx) + '_precios.pdf';
-      
-      a.download = newName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      updateStatus('Descarga completada', 'success');
-    } catch (err) {
-      console.error(err);
-      updateStatus('Error al exportar PDF', 'idle');
-      alert('Error al exportar el catálogo PDF: ' + err.message);
-    } finally {
-      btnDownloadPdf.removeAttribute('disabled');
-    }
+    showLoading('Generando catálogo PDF con precios anotados...');
+    updateStatus('Generando catálogo PDF...', 'loading');
+    btnDownloadPdf.setAttribute('disabled', 'true');
+
+    setTimeout(async () => {
+      try {
+        const annotatedBlob = await exportAnnotatedPDF(state.originalPdfFile, state.matchedItems, state.pricePosition, state.priceSize, state.priceMargin);
+        
+        // Trigger download
+        const url = URL.createObjectURL(annotatedBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        // Append "_precios" to original file name
+        const origName = state.originalPdfFile.name;
+        const extensionIdx = origName.lastIndexOf('.');
+        const newName = origName.substring(0, extensionIdx) + '_precios.pdf';
+        
+        a.download = newName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        updateStatus('Descarga completada', 'success');
+      } catch (err) {
+        console.error(err);
+        updateStatus('Error al exportar PDF', 'idle');
+        alert('Error al exportar el catálogo PDF: ' + err.message);
+      } finally {
+        btnDownloadPdf.removeAttribute('disabled');
+        hideLoading();
+      }
+    }, 100);
   });
 }
 
