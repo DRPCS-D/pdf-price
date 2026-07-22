@@ -639,7 +639,7 @@ body {
   pointer-events: auto; /* Clickable */
   background: transparent;
   border: none;
-  color: #D92D20; /* Rojo vibrante */
+  color: var(--price-color, #D92D20); /* Color de precio configurable */
   font-weight: 800;
   font-size: var(--price-size, 11px);
   padding: 4px 6px;

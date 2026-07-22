@@ -11,6 +11,9 @@ let state = {
   pricePosition: 'right', // Price label position ('right', 'left', 'above', 'below')
   priceSize: 11,          // Default price font size in px
   priceMargin: 5,         // Default spacing in px/points
+  showCurrency: true,     // Whether to show currency symbol
+  currencySymbol: '$',    // Currency symbol (default: '$')
+  priceColor: '#D92D20',  // Custom price color (default vibrant red)
   originalPdfFile: null,
   originalExcelFile: null,
   isProcessing: false,
@@ -36,6 +39,10 @@ const priceSizeSlider = document.getElementById('price-size');
 const priceSizeValDisplay = document.getElementById('price-size-val');
 const priceMarginSlider = document.getElementById('price-margin');
 const priceMarginValDisplay = document.getElementById('price-margin-val');
+const priceShowCurrencyCheckbox = document.getElementById('price-show-currency');
+const priceCurrencySymbolInput = document.getElementById('price-currency-symbol');
+const priceColorInput = document.getElementById('price-color');
+const priceColorHexDisplay = document.getElementById('price-color-hex');
 const codeSearchInput = document.getElementById('code-search');
 const manualCodeInput = document.getElementById('manual-code');
 const manualPriceInput = document.getElementById('manual-price');
@@ -71,10 +78,18 @@ function hideLoading() {
   loadingOverlay.classList.add('hidden');
 }
 
-// Formatting helper: "150.000" (no currency symbol, thousands separator dot, no decimals)
+// Formatting helper: "150.000" (thousands separator dot, no decimals)
 const priceFormatter = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 function formatPrice(value) {
   return priceFormatter.format(Math.round(value || 0));
+}
+
+function getFormattedPriceText(value) {
+  const formatted = formatPrice(value);
+  if (state.showCurrency) {
+    return `${state.currencySymbol} ${formatted}`;
+  }
+  return formatted;
 }
 
 // Initialize Events
@@ -92,6 +107,7 @@ function setupSettings() {
   // Set initial CSS variables
   document.documentElement.style.setProperty('--price-size', `${state.priceSize}px`);
   document.documentElement.style.setProperty('--price-margin', `${state.priceMargin * state.zoom}px`);
+  document.documentElement.style.setProperty('--price-color', state.priceColor);
 
   pricePositionSelect.addEventListener('change', (e) => {
     state.pricePosition = e.target.value;
@@ -114,6 +130,27 @@ function setupSettings() {
     state.priceMargin = newMargin;
     priceMarginValDisplay.textContent = newMargin;
     document.documentElement.style.setProperty('--price-margin', `${newMargin * state.zoom}px`);
+  });
+
+  priceShowCurrencyCheckbox.addEventListener('change', (e) => {
+    state.showCurrency = e.target.checked;
+    if (state.pdfDocument) {
+      redrawAllOverlays();
+    }
+  });
+
+  priceCurrencySymbolInput.addEventListener('input', (e) => {
+    state.currencySymbol = e.target.value;
+    if (state.pdfDocument) {
+      redrawAllOverlays();
+    }
+  });
+
+  priceColorInput.addEventListener('input', (e) => {
+    const newColor = e.target.value;
+    state.priceColor = newColor;
+    priceColorHexDisplay.textContent = newColor.toUpperCase();
+    document.documentElement.style.setProperty('--price-color', newColor);
   });
 }
 
@@ -348,8 +385,8 @@ function drawPriceBadges(overlayElement, matches, pageNum) {
     badge.style.left = `${left}px`;
     badge.style.top = `${top}px`;
     
-    // Format: "150.000" (no currency symbol, no decimals, dotted thousands)
-    badge.textContent = formatPrice(match.price);
+    // Format price according to settings
+    badge.textContent = getFormattedPriceText(match.price);
     
     badge.setAttribute('data-code', match.code);
     badge.setAttribute('title', `Código: ${match.code}\nHaz clic para editar`);
@@ -501,7 +538,7 @@ function saveMatchPrice(matchIndex, newPrice) {
       if (pageContainer) {
         const badges = pageContainer.querySelectorAll(`.price-badge[data-code="${item.code}"]`);
         badges.forEach(badge => {
-          badge.textContent = formatPrice(newPrice);
+          badge.textContent = getFormattedPriceText(newPrice);
         });
       }
     }
@@ -559,7 +596,7 @@ function setupManualForm() {
         if (pageContainer) {
           const badges = pageContainer.querySelectorAll(`.price-badge[data-code="${item.code}"]`);
           badges.forEach(badge => {
-            badge.textContent = formatPrice(price);
+            badge.textContent = getFormattedPriceText(price);
           });
         }
       }
@@ -610,7 +647,16 @@ function setupManualForm() {
 
     setTimeout(async () => {
       try {
-        const annotatedBlob = await exportAnnotatedPDF(state.originalPdfFile, state.matchedItems, state.pricePosition, state.priceSize, state.priceMargin);
+        const annotatedBlob = await exportAnnotatedPDF(
+          state.originalPdfFile,
+          state.matchedItems,
+          state.pricePosition,
+          state.priceSize,
+          state.priceMargin,
+          state.showCurrency,
+          state.currencySymbol,
+          state.priceColor
+        );
         
         // Trigger download
         const url = URL.createObjectURL(annotatedBlob);
@@ -709,7 +755,7 @@ function renderSearchDropdown(items) {
     
     el.innerHTML = `
       <span class="search-item-code">${item.code}</span>
-      <span class="search-item-info">Pág. ${item.pageNum} - ${displayPrice > 0 ? formatPrice(displayPrice) : 'Sin precio'}</span>
+      <span class="search-item-info">Pág. ${item.pageNum} - ${displayPrice > 0 ? getFormattedPriceText(displayPrice) : 'Sin precio'}</span>
     `;
     
     el.addEventListener('click', () => {
