@@ -12,7 +12,7 @@ let state = {
   priceSize: 11,          // Default price font size in px
   priceMargin: 5,         // Default spacing in px/points
   showCurrency: true,     // Whether to show currency symbol
-  currencySymbol: '$',    // Currency symbol (default: '$')
+  currencySymbol: 'Gs',   // Currency symbol (default: 'Gs')
   priceColor: '#D92D20',  // Custom price color (default vibrant red)
   showBorder: true,       // Whether to show price text outline border
   borderColor: 'white',   // Price border color ('white' or 'black')

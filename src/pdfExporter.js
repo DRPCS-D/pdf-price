@@ -52,7 +52,7 @@ export async function exportAnnotatedPDF(
   customFontSize = 11,
   customMargin = 5,
   showCurrency = false,
-  currencySymbol = '$',
+  currencySymbol = 'Gs',
   priceColor = '#D92D20',
   showBorder = true,
   borderColor = 'white'
