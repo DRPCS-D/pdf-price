@@ -63,6 +63,7 @@ const pdfPagesWrapper = document.getElementById('pdf-pages-wrapper');
 const priceEditPopover = document.getElementById('price-edit-popover');
 const popoverCodeDisplay = document.getElementById('popover-code');
 const popoverPriceInput = document.getElementById('popover-price-input');
+const popoverPositionSelect = document.getElementById('popover-position-select');
 const btnPopoverCancel = document.getElementById('btn-popover-cancel');
 const btnPopoverSave = document.getElementById('btn-popover-save');
 
@@ -358,9 +359,8 @@ async function renderAllPages() {
 function drawPriceBadges(overlayElement, matches, pageNum) {
   overlayElement.innerHTML = '';
   
-  const pos = state.pricePosition;
-  
   matches.forEach(match => {
+    const pos = (match.position && match.position !== 'default') ? match.position : state.pricePosition;
     const badge = document.createElement('div');
     badge.className = `price-badge pos-${pos}`;
     
@@ -461,7 +461,8 @@ function setupPopover() {
       return;
     }
     
-    saveMatchPrice(state.selectedMatchIndex, newPrice);
+    const newPos = popoverPositionSelect.value;
+    saveMatchPrice(state.selectedMatchIndex, newPrice, newPos);
     closePopover();
   });
 
@@ -483,6 +484,7 @@ function openPopover(badgeElement, match) {
   
   popoverCodeDisplay.textContent = `Código: ${match.code} (Pág. ${match.pageNum})`;
   popoverPriceInput.value = Math.round(match.price || 0);
+  popoverPositionSelect.value = match.position || 'default';
   
   // Highlight badge
   document.querySelectorAll('.price-badge').forEach(b => b.classList.remove('selected'));
@@ -520,7 +522,7 @@ function closePopover() {
   state.selectedMatchIndex = -1;
 }
 
-function saveMatchPrice(matchIndex, newPrice) {
+function saveMatchPrice(matchIndex, newPrice, newPosition = null) {
   if (matchIndex === -1 || matchIndex >= state.matchedItems.length) return;
   
   const match = state.matchedItems[matchIndex];
@@ -528,21 +530,19 @@ function saveMatchPrice(matchIndex, newPrice) {
   // Update price globally in the Excel database map
   state.excelPrices.set(match.code, newPrice);
   
+  if (newPosition) {
+    match.position = newPosition;
+  }
+
   // Update price in all matches for this code
-  state.matchedItems.forEach((item, index) => {
+  state.matchedItems.forEach((item) => {
     if (item.code === match.code) {
       item.price = newPrice;
-      
-      // Update DOM overlay badge if rendered
-      const pageContainer = document.querySelector(`.pdf-page-container[data-page-number="${item.pageNum}"]`);
-      if (pageContainer) {
-        const badges = pageContainer.querySelectorAll(`.price-badge[data-code="${item.code}"]`);
-        badges.forEach(badge => {
-          badge.textContent = getFormattedPriceText(newPrice);
-        });
-      }
     }
   });
+
+  // Re-draw overlays so position change is rendered
+  redrawAllOverlays();
 
   // Update sidebar forms if matching current code
   if (manualCodeInput.value.trim() === match.code) {
@@ -550,7 +550,7 @@ function saveMatchPrice(matchIndex, newPrice) {
   }
   
   updateMatchedStats();
-  updateStatus('Precio actualizado', 'success');
+  updateStatus('Precio y posición actualizados', 'success');
 }
 
 // 6. Search & Manual Entry Form

@@ -91,17 +91,19 @@ export async function exportAnnotatedPDF(
     // Position offset calculations (in PDF points, starting bottom-left)
     const margin = customMargin; // spacing in points
     
-    if (position === 'right') {
+    const itemPosition = (match.position && match.position !== 'default') ? match.position : position;
+    
+    if (itemPosition === 'right') {
       drawX = match.pdfX + match.pdfWidth + margin;
       drawY = match.pdfY;
-    } else if (position === 'left') {
+    } else if (itemPosition === 'left') {
       drawX = match.pdfX - textWidth - margin;
       drawY = match.pdfY;
-    } else if (position === 'above') {
+    } else if (itemPosition === 'above') {
       // Center horizontally relative to the code, place above code height
       drawX = match.pdfX + (match.pdfWidth - textWidth) / 2;
       drawY = match.pdfY + match.pdfHeight + margin;
-    } else if (position === 'below') {
+    } else if (itemPosition === 'below') {
       // Center horizontally relative to the code, place below baseline
       drawX = match.pdfX + (match.pdfWidth - textWidth) / 2;
       drawY = match.pdfY - fontSize - margin;
