@@ -53,7 +53,9 @@ export async function exportAnnotatedPDF(
   customMargin = 5,
   showCurrency = false,
   currencySymbol = '$',
-  priceColor = '#D92D20'
+  priceColor = '#D92D20',
+  showBorder = true,
+  borderColor = 'white'
 ) {
   const arrayBuffer = await originalPdfFile.arrayBuffer();
   const pdfDoc = await PDFDocument.load(arrayBuffer);
@@ -66,6 +68,7 @@ export async function exportAnnotatedPDF(
   const formatter = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   
   const { r, g, b } = hexToRgb(priceColor);
+  const outlineColor = borderColor === 'white' ? rgb(1, 1, 1) : rgb(0, 0, 0);
   
   // Process matches
   for (const match of matchedItems) {
@@ -109,7 +112,24 @@ export async function exportAnnotatedPDF(
       drawY = match.pdfY - fontSize - margin;
     }
     
-    // Draw price text directly in customized color, no background box
+    // If text outline / border is enabled, draw surrounding outline in border color for contrast
+    if (showBorder) {
+      const offsets = [
+        [-0.6, 0], [0.6, 0], [0, -0.6], [0, 0.6],
+        [-0.4, -0.4], [0.4, 0.4], [-0.4, 0.4], [0.4, -0.4]
+      ];
+      for (const [ox, oy] of offsets) {
+        page.drawText(priceText, {
+          x: drawX + ox,
+          y: drawY + oy,
+          size: fontSize,
+          font: font,
+          color: outlineColor
+        });
+      }
+    }
+
+    // Draw main price text directly in customized color on top
     page.drawText(priceText, {
       x: drawX,
       y: drawY,

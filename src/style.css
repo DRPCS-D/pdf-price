@@ -645,16 +645,79 @@ body {
   padding: 4px 6px;
   cursor: pointer;
   user-select: none;
-  text-shadow: 
-    -1px -1px 0 #fff,  
-     1px -1px 0 #fff,
-    -1px  1px 0 #fff,
-     1px  1px 0 #fff,
-     0px  1px 2px rgba(0, 0, 0, 0.15); /* Soft background contrast */
+  text-shadow: var(--price-text-shadow, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0px 1px 2px rgba(0, 0, 0, 0.15));
   transition: transform 0.15s ease, color 0.15s ease;
   white-space: nowrap;
   font-family: var(--font-sans);
   z-index: 5;
+}
+
+/* Directional Pad Controls in Popover */
+.directional-pad-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.directional-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 36px);
+  grid-template-rows: repeat(3, 32px);
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-arrow {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.btn-arrow:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  transform: scale(1.1);
+}
+
+.btn-arrow.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 8px var(--accent-cyan-glow);
+}
+
+.arrow-above {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.arrow-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.arrow-default {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.arrow-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.arrow-below {
+  grid-column: 2;
+  grid-row: 3;
 }
 
 /* Position-specific transforms to handle offsets automatically */

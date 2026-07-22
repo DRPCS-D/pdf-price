@@ -126,6 +126,19 @@
                   <span id="price-color-hex" style="font-size: 0.85rem; font-family: monospace; color: var(--text-muted);">#D92D20</span>
                 </div>
               </div>
+              <div class="form-group" style="margin-top: 12px;">
+                <label>Borde del precio (Contorno)</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 6px; user-select: none;">
+                    <input type="checkbox" id="price-show-border" checked style="cursor: pointer; width: 16px; height: 16px;">
+                    <label for="price-show-border" style="margin-bottom: 0; cursor: pointer; font-size: 0.8rem;">Activar</label>
+                  </div>
+                  <select id="price-border-color" class="form-select" style="flex: 1; padding: 6px 10px;">
+                    <option value="white" selected>Borde Blanco</option>
+                    <option value="black">Borde Negro</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </details>
         </section>
@@ -201,6 +214,18 @@
             <option value="above">Arriba del código</option>
             <option value="below">Abajo del código</option>
           </select>
+        </div>
+        <div class="form-group" style="margin-top: 10px;">
+          <label>Cambiar posición (Flechas)</label>
+          <div class="directional-pad-container">
+            <div class="directional-pad">
+              <button type="button" class="btn-arrow arrow-above" data-pos="above" title="Arriba">⬆️</button>
+              <button type="button" class="btn-arrow arrow-left" data-pos="left" title="Izquierda">⬅️</button>
+              <button type="button" class="btn-arrow arrow-default" data-pos="default" title="General">🔄</button>
+              <button type="button" class="btn-arrow arrow-right" data-pos="right" title="Derecha">➡️</button>
+              <button type="button" class="btn-arrow arrow-below" data-pos="below" title="Abajo">⬇️</button>
+            </div>
+          </div>
         </div>
         <div class="popover-actions">
           <button id="btn-popover-cancel" class="btn-text">Cancelar</button>

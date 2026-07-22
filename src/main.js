@@ -14,6 +14,8 @@ let state = {
   showCurrency: true,     // Whether to show currency symbol
   currencySymbol: '$',    // Currency symbol (default: '$')
   priceColor: '#D92D20',  // Custom price color (default vibrant red)
+  showBorder: true,       // Whether to show price text outline border
+  borderColor: 'white',   // Price border color ('white' or 'black')
   originalPdfFile: null,
   originalExcelFile: null,
   isProcessing: false,
@@ -43,6 +45,8 @@ const priceShowCurrencyCheckbox = document.getElementById('price-show-currency')
 const priceCurrencySymbolInput = document.getElementById('price-currency-symbol');
 const priceColorInput = document.getElementById('price-color');
 const priceColorHexDisplay = document.getElementById('price-color-hex');
+const priceShowBorderCheckbox = document.getElementById('price-show-border');
+const priceBorderColorSelect = document.getElementById('price-border-color');
 const codeSearchInput = document.getElementById('code-search');
 const manualCodeInput = document.getElementById('manual-code');
 const manualPriceInput = document.getElementById('manual-price');
@@ -109,6 +113,7 @@ function setupSettings() {
   document.documentElement.style.setProperty('--price-size', `${state.priceSize}px`);
   document.documentElement.style.setProperty('--price-margin', `${state.priceMargin * state.zoom}px`);
   document.documentElement.style.setProperty('--price-color', state.priceColor);
+  updatePriceBorderCSS();
 
   pricePositionSelect.addEventListener('change', (e) => {
     state.pricePosition = e.target.value;
@@ -153,6 +158,38 @@ function setupSettings() {
     priceColorHexDisplay.textContent = newColor.toUpperCase();
     document.documentElement.style.setProperty('--price-color', newColor);
   });
+
+  priceShowBorderCheckbox.addEventListener('change', (e) => {
+    state.showBorder = e.target.checked;
+    updatePriceBorderCSS();
+    if (state.pdfDocument) {
+      redrawAllOverlays();
+    }
+  });
+
+  priceBorderColorSelect.addEventListener('change', (e) => {
+    state.borderColor = e.target.value;
+    updatePriceBorderCSS();
+    if (state.pdfDocument) {
+      redrawAllOverlays();
+    }
+  });
+}
+
+function updatePriceBorderCSS() {
+  if (!state.showBorder) {
+    document.documentElement.style.setProperty('--price-text-shadow', 'none');
+  } else if (state.borderColor === 'white') {
+    document.documentElement.style.setProperty(
+      '--price-text-shadow',
+      '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0px 1px 2px rgba(0, 0, 0, 0.15)'
+    );
+  } else {
+    document.documentElement.style.setProperty(
+      '--price-text-shadow',
+      '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0px 1px 2px rgba(255, 255, 255, 0.15)'
+    );
+  }
 }
 
 function redrawAllOverlays() {
@@ -466,10 +503,41 @@ function setupPopover() {
     closePopover();
   });
 
+  // Bind directional arrow buttons
+  const arrowButtons = priceEditPopover.querySelectorAll('.btn-arrow');
+  arrowButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetPos = btn.getAttribute('data-pos');
+      popoverPositionSelect.value = targetPos;
+      updateArrowButtonsActiveState(targetPos);
+      const newPrice = parseFloat(popoverPriceInput.value) || 0;
+      saveMatchPrice(state.selectedMatchIndex, newPrice, targetPos);
+    });
+  });
+
+  popoverPositionSelect.addEventListener('change', (e) => {
+    updateArrowButtonsActiveState(e.target.value);
+    const newPrice = parseFloat(popoverPriceInput.value) || 0;
+    saveMatchPrice(state.selectedMatchIndex, newPrice, e.target.value);
+  });
+
   // Close popover if clicked outside
   document.addEventListener('click', (e) => {
     if (!priceEditPopover.contains(e.target) && !e.target.classList.contains('price-badge')) {
       closePopover();
+    }
+  });
+}
+
+function updateArrowButtonsActiveState(currentPos) {
+  const pos = currentPos || 'default';
+  const arrowButtons = priceEditPopover.querySelectorAll('.btn-arrow');
+  arrowButtons.forEach(btn => {
+    if (btn.getAttribute('data-pos') === pos) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
     }
   });
 }
@@ -484,7 +552,9 @@ function openPopover(badgeElement, match) {
   
   popoverCodeDisplay.textContent = `Código: ${match.code} (Pág. ${match.pageNum})`;
   popoverPriceInput.value = Math.round(match.price || 0);
-  popoverPositionSelect.value = match.position || 'default';
+  const currentPos = match.position || 'default';
+  popoverPositionSelect.value = currentPos;
+  updateArrowButtonsActiveState(currentPos);
   
   // Highlight badge
   document.querySelectorAll('.price-badge').forEach(b => b.classList.remove('selected'));
@@ -655,7 +725,9 @@ function setupManualForm() {
           state.priceMargin,
           state.showCurrency,
           state.currencySymbol,
-          state.priceColor
+          state.priceColor,
+          state.showBorder,
+          state.borderColor
         );
         
         // Trigger download
